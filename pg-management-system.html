@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PG Management System – Hyderabad</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET & VARIABLES ──────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;
+  --surface:#161b22;
+  --surface2:#1e2530;
+  --surface3:#252d38;
+  --border:#2a3441;
+  --accent:#f5a623;
+  --accent2:#3d8eff;
+  --green:#2dce89;
+  --red:#f5365c;
+  --orange:#fb6340;
+  --yellow:#ffd600;
+  --text:#e6edf3;
+  --text2:#8b949e;
+  --text3:#586069;
+  --radius:12px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+  --sidebar-w:260px;
+}
+html{font-size:14px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Syne',sans-serif}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:'DM Sans',sans-serif}
+input,select,textarea{font-family:'DM Sans',sans-serif}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ─── LAYOUT ──────────────────────────────── */
+#app{display:flex;min-height:100vh}
+.sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;height:100vh;z-index:100;transition:.3s;overflow-y:auto
+}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50
+}
+.content{padding:24px;flex:1}
+
+/* ─── SIDEBAR ──────────────────────────────── */
+.logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.logo-title{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;color:var(--accent);line-height:1.2}
+.logo-sub{font-size:.75rem;color:var(--text2);margin-top:2px}
+.nav-section{padding:8px 0}
+.nav-label{padding:10px 20px 4px;font-size:.65rem;font-weight:700;letter-spacing:.12em;color:var(--text3);text-transform:uppercase}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:10px 20px;
+  color:var(--text2);font-size:.88rem;font-weight:500;cursor:pointer;
+  border-left:3px solid transparent;transition:.15s;border-radius:0
+}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:rgba(245,166,35,.1);color:var(--accent);border-left-color:var(--accent)}
+.nav-item .ni{font-size:1.1rem;width:20px;text-align:center}
+.nav-item .badge{
+  margin-left:auto;background:var(--red);color:#fff;font-size:.65rem;
+  padding:2px 6px;border-radius:10px;font-weight:700
+}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border)}
+
+/* ─── TOPBAR ──────────────────────────────── */
+.page-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:8px 16px;
+  border-radius:8px;border:none;font-size:.85rem;font-weight:600;transition:.15s
+}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#e09510}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--surface3)}
+.btn-danger{background:rgba(245,54,92,.15);color:var(--red);border:1px solid rgba(245,54,92,.3)}
+.btn-danger:hover{background:rgba(245,54,92,.25)}
+.btn-success{background:rgba(45,206,137,.15);color:var(--green);border:1px solid rgba(45,206,137,.3)}
+.btn-success:hover{background:rgba(45,206,137,.25)}
+.btn-sm{padding:5px 10px;font-size:.78rem}
+.btn-icon{padding:8px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text2)}
+.btn-icon:hover{color:var(--text);background:var(--surface3)}
+
+/* ─── CARDS ──────────────────────────────── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card-title{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;margin-bottom:16px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+
+/* ─── STAT CARDS ──────────────────────────────── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;position:relative;overflow:hidden;transition:.2s
+}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card.blue::before{background:var(--accent2)}
+.stat-card.orange::before{background:var(--accent)}
+.stat-card.green::before{background:var(--green)}
+.stat-card.red::before{background:var(--red)}
+.stat-card.yellow::before{background:var(--yellow)}
+.stat-card:hover{border-color:var(--surface3);transform:translateY(-2px)}
+.stat-icon{font-size:1.8rem;margin-bottom:10px}
+.stat-val{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;line-height:1}
+.stat-label{font-size:.78rem;color:var(--text2);margin-top:4px}
+.stat-sub{font-size:.72rem;color:var(--text3);margin-top:2px}
+
+/* ─── TABS ──────────────────────────────── */
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content}
+.tab{padding:7px 16px;border-radius:7px;border:none;background:none;color:var(--text2);font-size:.85rem;font-weight:500;cursor:pointer;transition:.15s}
+.tab.active{background:var(--accent);color:#000;font-weight:700}
+.tab:hover:not(.active){background:var(--surface2);color:var(--text)}
+
+/* ─── TABLE ──────────────────────────────── */
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+thead{background:var(--surface2)}
+th{padding:12px 16px;text-align:left;font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.td-actions{display:flex;gap:6px}
+
+/* ─── BADGES ──────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:.72rem;font-weight:600}
+.badge-green{background:rgba(45,206,137,.15);color:var(--green)}
+.badge-red{background:rgba(245,54,92,.15);color:var(--red)}
+.badge-orange{background:rgba(251,99,64,.15);color:var(--orange)}
+.badge-blue{background:rgba(61,142,255,.15);color:var(--accent2)}
+.badge-yellow{background:rgba(255,214,0,.15);color:var(--yellow)}
+.badge-gray{background:rgba(139,148,158,.15);color:var(--text2)}
+
+/* ─── FORMS ──────────────────────────────── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+label{font-size:.8rem;font-weight:600;color:var(--text2)}
+input,select,textarea{
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:9px 12px;color:var(--text);font-size:.88rem;outline:none;transition:.15s;width:100%
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:var(--surface3)}
+select option{background:var(--surface2)}
+textarea{resize:vertical;min-height:80px}
+.form-section{margin-bottom:24px}
+.form-section-title{font-family:'Syne',sans-serif;font-size:.85rem;font-weight:700;color:var(--accent);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.08em}
+
+/* ─── MODAL ──────────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:.2s
+}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  width:100%;max-width:700px;max-height:90vh;overflow-y:auto;
+  transform:translateY(20px);transition:.2s;box-shadow:0 24px 60px rgba(0,0,0,.5)
+}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-header{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.modal-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+.modal-lg .modal{max-width:900px}
+
+/* ─── BED VISUALIZATION ──────────────────────────────── */
+.bed-grid{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.room-card{
+  background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  padding:16px;min-width:180px;flex:1;max-width:260px
+}
+.room-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.room-num{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem}
+.beds-row{display:flex;gap:8px;flex-wrap:wrap}
+.bed-slot{
+  width:40px;height:50px;border-radius:8px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;transition:.15s;
+  border:2px solid transparent;font-size:.65rem;font-weight:700;gap:2px
+}
+.bed-slot.available{background:rgba(45,206,137,.15);border-color:rgba(45,206,137,.4);color:var(--green)}
+.bed-slot.occupied{background:rgba(245,54,92,.15);border-color:rgba(245,54,92,.4);color:var(--red)}
+.bed-slot.reserved{background:rgba(251,99,64,.15);border-color:rgba(251,99,64,.4);color:var(--orange)}
+.bed-slot:hover{transform:scale(1.08)}
+.bed-slot .bed-icon{font-size:1.2rem}
+
+/* ─── FLOORS ACCORDION ──────────────────────────────── */
+.floor-block{margin-bottom:12px}
+.floor-header{
+  background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  padding:14px 20px;display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;transition:.15s
+}
+.floor-header:hover{background:var(--surface3)}
+.floor-header.open{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+.floor-body{
+  background:var(--surface2);border:1px solid var(--border);border-top:none;
+  border-bottom-left-radius:10px;border-bottom-right-radius:10px;
+  padding:16px;display:none
+}
+.floor-body.open{display:block}
+
+/* ─── PROGRESS BAR ──────────────────────────────── */
+.progress-bar{background:var(--surface3);border-radius:4px;height:6px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;transition:.3s}
+.progress-fill.green{background:var(--green)}
+.progress-fill.orange{background:var(--orange)}
+.progress-fill.red{background:var(--red)}
+
+/* ─── CHART ──────────────────────────────── */
+.donut-chart{position:relative;width:120px;height:120px}
+canvas{display:block}
+
+/* ─── REMINDER CARDS ──────────────────────────────── */
+.reminder-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.reminder-row:last-child{border-bottom:none}
+.reminder-avatar{
+  width:36px;height:36px;border-radius:50%;background:var(--surface3);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0
+}
+.reminder-info{flex:1;min-width:0}
+.reminder-name{font-weight:600;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reminder-detail{font-size:.75rem;color:var(--text2)}
+.reminder-due{text-align:right;font-size:.78rem;font-weight:600;flex-shrink:0}
+
+/* ─── SEARCH ──────────────────────────────── */
+.search-bar{position:relative}
+.search-bar input{padding-left:36px;background:var(--surface2)}
+.search-bar::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.9rem;pointer-events:none}
+
+/* ─── TOAST ──────────────────────────────── */
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:.85rem;
+  box-shadow:var(--shadow);min-width:240px;animation:slideIn .25s ease;
+}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--accent2)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ─── EMPTY STATE ──────────────────────────────── */
+.empty-state{text-align:center;padding:48px 20px;color:var(--text2)}
+.empty-icon{font-size:3rem;margin-bottom:12px;opacity:.4}
+.empty-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:6px}
+.empty-desc{font-size:.85rem;opacity:.6}
+
+/* ─── HAMBURGER ──────────────────────────────── */
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
+.hamburger span{width:22px;height:2px;background:var(--text);border-radius:2px;transition:.3s}
+.overlay-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+
+/* ─── RECEIPT ──────────────────────────────── */
+.receipt{background:#fff;color:#000;border-radius:8px;padding:24px;max-width:420px;margin:0 auto;font-family:'DM Sans',sans-serif}
+.receipt-header{text-align:center;border-bottom:2px dashed #ddd;padding-bottom:16px;margin-bottom:16px}
+.receipt-row{display:flex;justify-content:space-between;padding:4px 0;font-size:.88rem}
+.receipt-row.total{font-weight:700;border-top:2px dashed #ddd;padding-top:10px;margin-top:6px;font-size:1rem}
+
+/* ─── TRANSFER HISTORY ──────────────────────────────── */
+.timeline{padding-left:16px;border-left:2px solid var(--border)}
+.tl-item{position:relative;padding:0 0 20px 20px}
+.tl-item::before{content:'';position:absolute;left:-7px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
+.tl-date{font-size:.75rem;color:var(--text3);margin-bottom:4px}
+.tl-title{font-weight:600;font-size:.88rem}
+.tl-desc{font-size:.78rem;color:var(--text2);margin-top:2px}
+
+/* ─── RESPONSIVE ──────────────────────────────── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .hamburger{display:flex}
+  .overlay-bg.open{display:block}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+  .modal{max-width:100%}
+}
+
+/* ─── PAGES ──────────────────────────────── */
+.page{display:none}.page.active{display:block}
+
+/* ─── ROLE PILL ──────────────────────────────── */
+.role-pill{background:rgba(245,166,35,.15);color:var(--accent);border-radius:6px;padding:3px 10px;font-size:.75rem;font-weight:700}
+
+/* ─── AUDIT LOG ──────────────────────────────── */
+.audit-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:.82rem}
+.audit-row:last-child{border-bottom:none}
+.audit-time{color:var(--text3);white-space:nowrap;flex-shrink:0;min-width:110px}
+.audit-action{flex:1}
+.audit-user{color:var(--accent2);font-weight:600}
+
+/* ─── GRID HELPERS ──────────────────────────────── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* ─── RANGE DISPLAY ──────────────────────────────── */
+.flex-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.info-chip{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.78rem;color:var(--text2)}
+</style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+<div class="overlay-bg" id="overlay-bg" onclick="closeSidebar()"></div>
+
+<div id="app">
+<!-- ─── SIDEBAR ──────────────────────────────── -->
+<nav class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-title">🏠 PG Manager</div>
+    <div class="logo-sub">Hyderabad | v1.0</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="nav('dashboard')"><span class="ni">📊</span>Dashboard</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Property</div>
+    <div class="nav-item" onclick="nav('buildings')"><span class="ni">🏢</span>Buildings & Floors</div>
+    <div class="nav-item" onclick="nav('rooms')"><span class="ni">🚪</span>Room Management</div>
+    <div class="nav-item" onclick="nav('beds')"><span class="ni">🛏️</span>Bed Allocation</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Residents</div>
+    <div class="nav-item" onclick="nav('residents')"><span class="ni">👥</span>All Residents</div>
+    <div class="nav-item" onclick="nav('transfers')"><span class="ni">🔄</span>Transfers</div>
+    <div class="nav-item" onclick="nav('checkout')"><span class="ni">🚶</span>Checkout</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Finance</div>
+    <div class="nav-item" onclick="nav('payments')"><span class="ni">💳</span>Payments<span class="badge" id="overdue-badge">0</span></div>
+    <div class="nav-item" onclick="nav('reminders')"><span class="ni">🔔</span>Reminders</div>
+    <div class="nav-item" onclick="nav('reports')"><span class="ni">📋</span>Reports</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">System</div>
+    <div class="nav-item" onclick="nav('users')"><span class="ni">👤</span>User Roles</div>
+    <div class="nav-item" onclick="nav('audit')"><span class="ni">📜</span>Audit Log</div>
+  </div>
+  <div class="sidebar-footer">
+    <div style="font-size:.75rem;color:var(--text3)">Logged in as</div>
+    <div style="font-weight:600;font-size:.88rem;margin-top:2px" id="current-user-name">Admin User</div>
+    <div class="role-pill" style="margin-top:4px;display:inline-block" id="current-user-role">Admin</div>
+  </div>
+</nav>
+
+<!-- ─── MAIN ──────────────────────────────── -->
+<div class="main">
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></div>
+    <div class="page-title" id="page-title">Dashboard</div>
+  </div>
+  <div class="topbar-right">
+    <div class="search-bar" style="display:none" id="global-search-bar">
+      <input type="text" placeholder="Search resident, room…" id="global-search-input" oninput="globalSearch(this.value)">
+    </div>
+    <button class="btn-icon" onclick="toggleSearch()" title="Search">🔍</button>
+    <button class="btn btn-primary btn-sm" id="topbar-action" onclick="topbarAction()">+ Add</button>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="page active" id="page-dashboard">
+  <div class="stats-grid" id="stats-grid"></div>
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-title">Occupancy Overview</div>
+      <div id="occ-chart-area" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Monthly Revenue</div>
+      <div id="revenue-bars" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Upcoming Payments</span>
+        <span class="badge badge-yellow" id="upcoming-count">0</span>
+      </div>
+      <div id="upcoming-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Overdue Payments</span>
+        <span class="badge badge-red" id="overdue-count">0</span>
+      </div>
+      <div id="overdue-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BUILDINGS ═══ -->
+<div class="page" id="page-buildings">
+  <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="openModal('modal-building')">+ Add Building</button>
+    <button class="btn btn-secondary" onclick="openModal('modal-floor')">+ Add Floor</button>
+  </div>
+  <div id="buildings-list"></div>
+</div>
+
+<!-- ═══ ROOMS ═══ -->
+<div class="page" id="page-rooms">
+  <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+    <button class="btn btn-primary" onclick="openModal('modal-room')">+ Add Room</button>
+    <button class="btn btn-secondary" onclick="openModal('modal-bulk-rooms')">⚡ Bulk Generate Rooms</button>
+    <div style="flex:1"></div>
+    <select id="room-filter-type" onchange="renderRooms()" style="width:auto;padding:8px 12px">
+      <option value="">All Types</option>
+      <option>Single</option><option>Double</option><option>Triple</option><option>Four Sharing</option>
+    </select>
+    <select id="room-filter-status" onchange="renderRooms()" style="width:auto;padding:8px 12px">
+      <option value="">All Status</option>
+      <option>Vacant</option><option>Partially Occupied</option><option>Fully Occupied</option>
+    </select>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Room No.</th><th>Building/Floor</th><th>Type</th><th>Beds</th><th>Occupied</th><th>Rent/Bed</th><th>Deposit</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody id="rooms-tbody"></tbody>
+  </table></div>
+</div>
+
+<!-- ═══ BED ALLOCATION ═══ -->
+<div class="page" id="page-beds">
+  <div style="margin-bottom:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+    <select id="bed-filter-building" onchange="renderBeds()" style="width:auto;padding:8px 12px">
+      <option value="">All Buildings</option>
+    </select>
+    <select id="bed-filter-floor" onchange="renderBeds()" style="width:auto;padding:8px 12px">
+      <option value="">All Floors</option>
+    </select>
+    <div style="display:flex;gap:8px;margin-left:auto">
+      <span class="badge badge-green">🟢 Available</span>
+      <span class="badge badge-red">🔴 Occupied</span>
+      <span class="badge badge-orange">🟠 Reserved</span>
+    </div>
+  </div>
+  <div id="bed-floors-container"></div>
+</div>
+
+<!-- ═══ RESIDENTS ═══ -->
+<div class="page" id="page-residents">
+  <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+    <button class="btn btn-primary" onclick="openAddResident()">+ Add Resident</button>
+    <div class="search-bar" style="flex:1;max-width:300px">
+      <input type="text" placeholder="Search by name, mobile, room…" id="res-search" oninput="renderResidents()">
+    </div>
+    <select id="res-filter" onchange="renderResidents()" style="width:auto;padding:8px 12px">
+      <option value="">All Residents</option>
+      <option value="active">Active</option>
+      <option value="checkout">Checked Out</option>
+    </select>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Mobile</th><th>Room / Bed</th><th>Join Date</th><th>Rent</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody id="residents-tbody"></tbody>
+  </table></div>
+</div>
+
+<!-- ═══ TRANSFERS ═══ -->
+<div class="page" id="page-transfers">
+  <div style="display:flex;gap:12px;margin-bottom:20px">
+    <button class="btn btn-primary" onclick="openModal('modal-transfer')">+ New Transfer</button>
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card-title" style="margin-bottom:12px">Transfer History</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Resident</th><th>From</th><th>To</th><th>Date</th><th>Reason</th></tr></thead>
+        <tbody id="transfer-tbody"></tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Timeline</div>
+      <div class="timeline" id="transfer-timeline"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CHECKOUT ═══ -->
+<div class="page" id="page-checkout">
+  <div style="margin-bottom:20px">
+    <div class="card-title" style="font-size:1rem;color:var(--text);margin-bottom:16px">Initiate Resident Checkout</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px">
+      <div class="form-group" style="min-width:240px">
+        <label>Select Resident</label>
+        <select id="checkout-resident-select" onchange="showCheckoutPreview()">
+          <option value="">-- Select Active Resident --</option>
+        </select>
+      </div>
+    </div>
+    <div id="checkout-preview"></div>
+  </div>
+  <div>
+    <div class="card-title" style="font-size:1rem;color:var(--text);margin-bottom:12px">Checkout History</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Room</th><th>Checkout Date</th><th>Dues Paid</th><th>Deposit Refund</th><th>Settlement</th></tr></thead>
+      <tbody id="checkout-tbody"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ═══ PAYMENTS ═══ -->
+<div class="page" id="page-payments">
+  <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+    <button class="btn btn-primary" onclick="openModal('modal-payment')">+ Record Payment</button>
+    <div style="flex:1"></div>
+    <select id="pay-filter" onchange="renderPayments()" style="width:auto;padding:8px 12px">
+      <option value="">All Payments</option>
+      <option value="paid">Paid</option>
+      <option value="pending">Pending</option>
+      <option value="overdue">Overdue</option>
+    </select>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Resident</th><th>Room/Bed</th><th>Month</th><th>Amount</th><th>Mode</th><th>Paid On</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody id="payments-tbody"></tbody>
+  </table></div>
+</div>
+
+<!-- ═══ REMINDERS ═══ -->
+<div class="page" id="page-reminders">
+  <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-val" id="r-paid">0</div><div class="stat-label">Paid This Month</div></div>
+    <div class="stat-card yellow"><div class="stat-icon">⏰</div><div class="stat-val" id="r-today">0</div><div class="stat-label">Due Today</div></div>
+    <div class="stat-card orange"><div class="stat-icon">📅</div><div class="stat-val" id="r-7days">0</div><div class="stat-label">Due in 7 Days</div></div>
+    <div class="stat-card red"><div class="stat-icon">🚨</div><div class="stat-val" id="r-overdue">0</div><div class="stat-label">Overdue</div></div>
+  </div>
+  <div class="grid-2" style="margin-top:20px">
+    <div class="card">
+      <div class="card-title">Due Today / Tomorrow</div>
+      <div id="rem-today-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Overdue Payments</div>
+      <div id="rem-overdue-list"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">Upcoming (Next 7 Days)</div>
+    <div id="rem-upcoming-list"></div>
+  </div>
+</div>
+
+<!-- ═══ REPORTS ═══ -->
+<div class="page" id="page-reports">
+  <div class="tabs">
+    <div class="tab active" onclick="switchReportTab('occupancy',this)">Occupancy</div>
+    <div class="tab" onclick="switchReportTab('collection',this)">Collection</div>
+    <div class="tab" onclick="switchReportTab('residents',this)">Residents</div>
+    <div class="tab" onclick="switchReportTab('vacancy',this)">Vacancy</div>
+    <div class="tab" onclick="switchReportTab('due',this)">Due Rent</div>
+    <div class="tab" onclick="switchReportTab('transfer-history',this)">Transfers</div>
+  </div>
+  <div id="report-area"></div>
+</div>
+
+<!-- ═══ USERS ═══ -->
+<div class="page" id="page-users">
+  <div style="display:flex;gap:12px;margin-bottom:20px">
+    <button class="btn btn-primary" onclick="openModal('modal-user')">+ Add User</button>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody id="users-tbody"></tbody>
+  </table></div>
+</div>
+
+<!-- ═══ AUDIT ═══ -->
+<div class="page" id="page-audit">
+  <div class="card">
+    <div class="card-title">System Audit Log</div>
+    <div id="audit-list"></div>
+  </div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+
+<!-- Building Modal -->
+<div class="modal-overlay" id="modal-building">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Add Building</div>
+      <button class="btn-icon" onclick="closeModal('modal-building')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Building Name *</label><input id="b-name" placeholder="e.g. Krishna Residency"></div>
+      <div class="form-group" style="margin-top:12px"><label>Address</label><textarea id="b-addr" placeholder="Full address…"></textarea></div>
+      <div class="form-group" style="margin-top:12px"><label>Total Floors</label><input id="b-floors" type="number" min="1" value="1"></div>
+      <div class="form-group" style="margin-top:12px"><label>Notes</label><input id="b-notes" placeholder="Optional notes"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-building')">Cancel</button>
+      <button class="btn btn-primary" onclick="addBuilding()">Save Building</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floor Modal -->
+<div class="modal-overlay" id="modal-floor">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Add Floor</div>
+      <button class="btn-icon" onclick="closeModal('modal-floor')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Building *</label><select id="fl-building"></select></div>
+      <div class="form-group" style="margin-top:12px"><label>Floor Number *</label><input id="fl-num" type="number" min="0" placeholder="e.g. 1"></div>
+      <div class="form-group" style="margin-top:12px"><label>Floor Name</label><input id="fl-name" placeholder="e.g. Ground Floor"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-floor')">Cancel</button>
+      <button class="btn btn-primary" onclick="addFloor()">Save Floor</button>
+    </div>
+  </div>
+</div>
+
+<!-- Room Modal -->
+<div class="modal-overlay" id="modal-room">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Room</div>
+      <button class="btn-icon" onclick="closeModal('modal-room')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Building *</label><select id="r-building" onchange="populateFloorSelect('r-floor','r-building')"></select></div>
+        <div class="form-group"><label>Floor *</label><select id="r-floor"></select></div>
+        <div class="form-group"><label>Room Number *</label><input id="r-num" placeholder="e.g. 101"></div>
+        <div class="form-group"><label>Room Type *</label>
+          <select id="r-type" onchange="updateBedCount()">
+            <option value="Single">Single (1 bed)</option>
+            <option value="Double">Double (2 beds)</option>
+            <option value="Triple">Triple (3 beds)</option>
+            <option value="Four Sharing">Four Sharing (4 beds)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Monthly Rent / Bed (₹)</label><input id="r-rent" type="number" placeholder="5000"></div>
+        <div class="form-group"><label>Security Deposit (₹)</label><input id="r-deposit" type="number" placeholder="10000"></div>
+        <div class="form-group full"><label>Notes</label><input id="r-notes" placeholder="Optional room notes"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-room')">Cancel</button>
+      <button class="btn btn-primary" onclick="addRoom()">Save Room</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Rooms Modal -->
+<div class="modal-overlay" id="modal-bulk-rooms">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚡ Bulk Generate Rooms</div>
+      <button class="btn-icon" onclick="closeModal('modal-bulk-rooms')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Building *</label><select id="br-building" onchange="populateFloorSelect('br-floor','br-building')"></select></div>
+        <div class="form-group"><label>Floor *</label><select id="br-floor"></select></div>
+        <div class="form-group"><label>Room Number From *</label><input id="br-from" type="number" placeholder="101"></div>
+        <div class="form-group"><label>Room Number To *</label><input id="br-to" type="number" placeholder="120"></div>
+        <div class="form-group"><label>Room Type</label>
+          <select id="br-type">
+            <option>Single</option><option>Double</option><option>Triple</option><option>Four Sharing</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Rent / Bed (₹)</label><input id="br-rent" type="number" placeholder="5000"></div>
+        <div class="form-group"><label>Deposit (₹)</label><input id="br-deposit" type="number" placeholder="10000"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-bulk-rooms')">Cancel</button>
+      <button class="btn btn-primary" onclick="bulkAddRooms()">Generate Rooms</button>
+    </div>
+  </div>
+</div>
+
+<!-- Resident Modal -->
+<div class="modal-overlay modal-lg" id="modal-resident">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="resident-modal-title">Add Resident</div>
+      <button class="btn-icon" onclick="closeModal('modal-resident')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section">
+        <div class="form-section-title">Personal Details</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Full Name *</label><input id="res-name" placeholder="Full Name"></div>
+          <div class="form-group"><label>Mobile Number *</label><input id="res-mobile" placeholder="9XXXXXXXXX" maxlength="10"></div>
+          <div class="form-group"><label>Alternate Mobile</label><input id="res-alt-mobile" placeholder="Optional"></div>
+          <div class="form-group"><label>Email</label><input id="res-email" type="email" placeholder="email@example.com"></div>
+          <div class="form-group"><label>Date of Birth</label><input id="res-dob" type="date"></div>
+          <div class="form-group"><label>Gender</label><select id="res-gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+          <div class="form-group"><label>Aadhaar Number</label><input id="res-aadhaar" placeholder="XXXX XXXX XXXX" maxlength="14"></div>
+          <div class="form-group"><label>Emergency Contact Name</label><input id="res-ec-name" placeholder="Name"></div>
+          <div class="form-group"><label>Emergency Contact Number</label><input id="res-ec-num" placeholder="Mobile"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Address Details</div>
+        <div class="form-grid">
+          <div class="form-group full"><label>Permanent Address</label><textarea id="res-addr" placeholder="Full permanent address"></textarea></div>
+          <div class="form-group"><label>City</label><input id="res-city" placeholder="City"></div>
+          <div class="form-group"><label>State</label><input id="res-state" placeholder="State"></div>
+          <div class="form-group"><label>Pincode</label><input id="res-pin" placeholder="500001" maxlength="6"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Employment Details</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Company Name</label><input id="res-company" placeholder="Company"></div>
+          <div class="form-group"><label>Employee ID</label><input id="res-empid" placeholder="EMP001"></div>
+          <div class="form-group"><label>Work Location</label><input id="res-workloc" placeholder="Location"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Stay Details</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Joining Date *</label><input id="res-join" type="date"></div>
+          <div class="form-group"><label>Expected Leaving Date</label><input id="res-leave" type="date"></div>
+          <div class="form-group"><label>Building</label><select id="res-building" onchange="populateResRoomSelect()"></select></div>
+          <div class="form-group"><label>Room *</label><select id="res-room" onchange="populateResBedSelect()"></select></div>
+          <div class="form-group"><label>Bed *</label><select id="res-bed"></select></div>
+          <div class="form-group"><label>Rent Amount (₹)</label><input id="res-rent" type="number" placeholder="5000"></div>
+          <div class="form-group"><label>Security Deposit (₹)</label><input id="res-deposit-amt" type="number"></div>
+          <div class="form-group"><label>Advance Paid (₹)</label><input id="res-advance" type="number" placeholder="0"></div>
+          <div class="form-group"><label>Payment Due Day</label><input id="res-dueday" type="number" min="1" max="31" value="5"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-resident')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveResident()" id="save-resident-btn">Add Resident</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transfer Modal -->
+<div class="modal-overlay" id="modal-transfer">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Resident Transfer</div>
+      <button class="btn-icon" onclick="closeModal('modal-transfer')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Resident *</label><select id="tr-resident" onchange="fillTransferFrom()"></select></div>
+        <div class="form-group"><label>Transfer Date *</label><input id="tr-date" type="date"></div>
+        <div class="form-group"><label>Current Room</label><input id="tr-from-room" readonly></div>
+        <div class="form-group"><label>Current Bed</label><input id="tr-from-bed" readonly></div>
+        <div class="form-group"><label>New Building</label><select id="tr-building" onchange="populateFloorSelect('tr-floor','tr-building');populateTrRoomSelect()"></select></div>
+        <div class="form-group"><label>New Room *</label><select id="tr-room" onchange="populateTrBedSelect()"></select></div>
+        <div class="form-group"><label>New Bed *</label><select id="tr-bed"></select></div>
+        <div class="form-group full"><label>Transfer Reason</label><input id="tr-reason" placeholder="Reason for transfer"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-transfer')">Cancel</button>
+      <button class="btn btn-primary" onclick="doTransfer()">Confirm Transfer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="modal-payment">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Record Payment</div>
+      <button class="btn-icon" onclick="closeModal('modal-payment')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Resident *</label><select id="pay-resident" onchange="fillPaymentInfo()"></select></div>
+        <div class="form-group"><label>Payment Month *</label><input id="pay-month" type="month"></div>
+        <div class="form-group"><label>Amount (₹) *</label><input id="pay-amount" type="number"></div>
+        <div class="form-group"><label>Extra Charges (₹)</label><input id="pay-extra" type="number" value="0"></div>
+        <div class="form-group"><label>Discount (₹)</label><input id="pay-discount" type="number" value="0"></div>
+        <div class="form-group"><label>Payment Mode *</label>
+          <select id="pay-mode"><option>UPI</option><option>Cash</option><option>Bank Transfer</option><option>Card</option></select>
+        </div>
+        <div class="form-group"><label>Payment Date *</label><input id="pay-date" type="date"></div>
+        <div class="form-group"><label>Transaction ID / Ref</label><input id="pay-ref" placeholder="Optional reference"></div>
+        <div class="form-group full"><label>Notes</label><input id="pay-notes" placeholder="Optional"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-payment')">Cancel</button>
+      <button class="btn btn-primary" onclick="recordPayment()">Save Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Add User</div>
+      <button class="btn-icon" onclick="closeModal('modal-user')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Full Name *</label><input id="u-name" placeholder="Name"></div>
+      <div class="form-group" style="margin-top:12px"><label>Email *</label><input id="u-email" type="email" placeholder="email@example.com"></div>
+      <div class="form-group" style="margin-top:12px"><label>Role *</label>
+        <select id="u-role"><option>Admin</option><option>Manager</option><option>Accountant</option></select>
+      </div>
+      <div class="form-group" style="margin-top:12px"><label>Password *</label><input id="u-pass" type="password" placeholder="Password"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-user')">Cancel</button>
+      <button class="btn btn-primary" onclick="addUser()">Add User</button>
+    </div>
+  </div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal-overlay" id="modal-receipt">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Payment Receipt</div>
+      <button class="btn-icon" onclick="closeModal('modal-receipt')">✕</button>
+    </div>
+    <div class="modal-body"><div id="receipt-content"></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-receipt')">Close</button>
+      <button class="btn btn-primary" onclick="printReceipt()">🖨️ Print</button>
+    </div>
+  </div>
+</div>
+
+<!-- Global Search Results Modal -->
+<div class="modal-overlay" id="modal-search">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title">Search Results</div>
+      <button class="btn-icon" onclick="closeModal('modal-search')">✕</button>
+    </div>
+    <div class="modal-body"><div id="search-results"></div></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   DATA LAYER — localStorage wrappers
+═══════════════════════════════════════════════ */
+const KEYS={
+  buildings:'pgm_buildings',floors:'pgm_floors',rooms:'pgm_rooms',
+  beds:'pgm_beds',residents:'pgm_residents',payments:'pgm_payments',
+  transfers:'pgm_transfers',checkouts:'pgm_checkouts',
+  users:'pgm_users',audit:'pgm_audit'
+};
+const load=k=>JSON.parse(localStorage.getItem(KEYS[k])||'[]');
+const save=(k,v)=>localStorage.setItem(KEYS[k],JSON.stringify(v));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const today=()=>new Date().toISOString().split('T')[0];
+const fmtDate=d=>d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
+const fmtMoney=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+
+/* ═══════════════════════════════════════════════
+   SEED DATA
+═══════════════════════════════════════════════ */
+function seedData(){
+  if(load('buildings').length) return;
+  const b1=uid(),b2=uid();
+  save('buildings',[
+    {id:b1,name:'Krishna Residency',address:'Madhapur, Hyderabad',floors:3,notes:'Main building'},
+    {id:b2,name:'Sai Boys PG',address:'Hitech City, Hyderabad',floors:2,notes:'Boys only'}
+  ]);
+  const f1=uid(),f2=uid(),f3=uid(),f4=uid();
+  save('floors',[
+    {id:f1,buildingId:b1,num:0,name:'Ground Floor'},
+    {id:f2,buildingId:b1,num:1,name:'First Floor'},
+    {id:f3,buildingId:b2,num:0,name:'Ground Floor'},
+    {id:f4,buildingId:b2,num:1,name:'First Floor'}
+  ]);
+  // rooms
+  const rooms=[];const beds=[];
+  const addR=(bid,fid,num,type,rent,dep)=>{
+    const rid=uid();
+    const sharing={'Single':1,'Double':2,'Triple':3,'Four Sharing':4}[type];
+    rooms.push({id:rid,buildingId:bid,floorId:fid,num:String(num),type,rent,deposit:dep,notes:''});
+    for(let i=0;i<sharing;i++){
+      beds.push({id:uid(),roomId:rid,label:String.fromCharCode(65+i),status:'available',residentId:null});
+    }
+    return rid;
+  };
+  const r101=addR(b1,f1,'101','Double',5000,10000);
+  const r102=addR(b1,f1,'102','Triple',4500,9000);
+  const r201=addR(b1,f2,'201','Single',7000,14000);
+  const r202=addR(b1,f2,'202','Four Sharing',3500,7000);
+  const r301=addR(b2,f3,'301','Double',5500,11000);
+  const r302=addR(b2,f4,'302','Triple',4000,8000);
+  save('rooms',rooms);save('beds',beds);
+
+  // residents
+  const residents=[];const payments=[];
+  const allBeds=load('beds');
+  const occupyBed=(roomId,bedLabel)=>{
+    const b=allBeds.find(x=>x.roomId===roomId&&x.label===bedLabel);
+    return b?b.id:null;
+  };
+  const addRes=(name,mobile,room,bedId,joinDate,rent,dep,dueDay,status='active')=>{
+    const rid=uid();
+    residents.push({
+      id:rid,name,mobile,altMobile:'',email:'',dob:'',gender:'Male',aadhaar:'',
+      ecName:'',ecNum:'',addr:'',city:'Hyderabad',state:'Telangana',pin:'500081',
+      company:'TCS',empId:'',workLoc:'Hitech City',joinDate,leaveDate:'',
+      roomId:room,bedId,rent,deposit:dep,advance:rent,dueDay,status
+    });
+    // update bed
+    const bed=allBeds.find(x=>x.id===bedId);
+    if(bed){bed.status='occupied';bed.residentId=rid;}
+    return rid;
+  };
+  const allRooms=load('rooms');
+  const getRoomId=num=>allRooms.find(r=>r.num===num)?.id;
+  const bedIds={};
+  allBeds.forEach(b=>{bedIds[b.roomId+'_'+b.label]=b.id;});
+
+  const r1=addRes('Ravi Kumar','9876543210',r101,bedIds[r101+'_A'],'2024-01-10',5000,10000,5);
+  const r2=addRes('Suresh Rao','9876543211',r102,bedIds[r102+'_A'],'2024-02-15',4500,9000,7);
+  const r3=addRes('Kiran Reddy','9876543212',r202,bedIds[r202+'_A'],'2024-03-01',3500,7000,1);
+  const r4=addRes('Arjun Singh','9876543213',r301,bedIds[r301+'_A'],'2024-03-20',5500,11000,10);
+  allBeds.find(x=>x.id===bedIds[r101+'_A'])&&(allBeds.find(x=>x.id===bedIds[r101+'_A']).status='occupied');
+  save('beds',allBeds);
+
+  save('residents',residents);
+
+  // payments
+  const months=['2024-10','2024-11','2024-12','2025-01'];
+  residents.forEach(res=>{
+    months.forEach((m,i)=>{
+      payments.push({
+        id:uid(),residentId:res.id,month:m,amount:res.rent,extra:0,discount:0,
+        mode:['UPI','Cash','Bank Transfer','UPI'][i],paidDate:m+'-05',ref:'',notes:'',status:'paid'
+      });
+    });
+    // add a pending payment
+    const thisMonth=new Date().toISOString().slice(0,7);
+    payments.push({
+      id:uid(),residentId:res.id,month:thisMonth,amount:res.rent,extra:0,discount:0,
+      mode:'',paidDate:'',ref:'',notes:'',status:'pending'
+    });
+  });
+  save('payments',payments);
+
+  // users
+  save('users',[
+    {id:uid(),name:'Admin User',email:'admin@pgmanager.in',role:'Admin',status:'Active'},
+    {id:uid(),name:'Ramesh Manager',email:'manager@pgmanager.in',role:'Manager',status:'Active'},
+    {id:uid(),name:'Priya Accounts',email:'accounts@pgmanager.in',role:'Accountant',status:'Active'}
+  ]);
+
+  addAudit('System','Data seeded with sample buildings, rooms and residents','Admin');
+}
+
+/* ═══════════════════════════════════════════════
+   AUDIT
+═══════════════════════════════════════════════ */
+function addAudit(action,detail,user){
+  const logs=load('audit');
+  logs.unshift({id:uid(),action,detail,user:user||'Admin',ts:new Date().toISOString()});
+  if(logs.length>200)logs.splice(200);
+  save('audit',logs);
+}
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════ */
+const PAGE_TITLES={dashboard:'Dashboard',buildings:'Buildings & Floors',rooms:'Room Management',beds:'Bed Allocation',residents:'Residents',transfers:'Transfers',checkout:'Checkout',payments:'Payments',reminders:'Reminders',reports:'Reports',users:'User Roles',audit:'Audit Log'};
+const TOPBAR_ACTIONS={dashboard:'',buildings:'',rooms:'+ Add Room',beds:'',residents:'+ Add Resident',transfers:'+ Transfer',checkout:'',payments:'+ Payment',reminders:'',reports:'',users:'+ Add User',audit:''};
+
+let currentPage='dashboard';
+function nav(page){
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.classList.toggle('active',el.getAttribute('onclick')===`nav('${page}')`);
+  });
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('page-title').textContent=PAGE_TITLES[page];
+  const act=TOPBAR_ACTIONS[page];
+  const btn=document.getElementById('topbar-action');
+  btn.style.display=act?'inline-flex':'none';
+  btn.textContent=act;
+  currentPage=page;
+  renderPage(page);
+  closeSidebar();
+}
+function topbarAction(){
+  const map={rooms:()=>openModal('modal-room'),residents:openAddResident,payments:()=>openModal('modal-payment'),transfers:()=>openModal('modal-transfer'),users:()=>openModal('modal-user')};
+  if(map[currentPage])map[currentPage]();
+}
+
+function renderPage(p){
+  const m={dashboard:renderDashboard,buildings:renderBuildings,rooms:renderRooms,beds:renderBeds,residents:renderResidents,transfers:renderTransfers,checkout:renderCheckout,payments:renderPayments,reminders:renderReminders,reports:()=>switchReportTab('occupancy',document.querySelector('.tab.active')||document.querySelector('.tab')),users:renderUsers,audit:renderAudit};
+  if(m[p])m[p]();
+}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════ */
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay-bg').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay-bg').classList.remove('open');
+}
+
+/* ═══════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════ */
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open')});
+});
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+function toast(msg,type='success'){
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  const icons={success:'✅',error:'❌',info:'ℹ️'};
+  t.innerHTML=`<span>${icons[type]||'✅'}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+/* ═══════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════ */
+function getBuildingName(id){return load('buildings').find(b=>b.id===id)?.name||'—';}
+function getFloorName(id){const f=load('floors').find(x=>x.id===id);return f?`Floor ${f.num}${f.name?' – '+f.name:''}`:'—';}
+function getRoomNum(id){return load('rooms').find(r=>r.id===id)?.num||'—';}
+function getBedLabel(id){return load('beds').find(b=>b.id===id)?.label||'—';}
+function getResidentName(id){return load('residents').find(r=>r.id===id)?.name||'—';}
+function getRoomStatus(roomId){
+  const beds=load('beds').filter(b=>b.roomId===roomId);
+  const occ=beds.filter(b=>b.status==='occupied').length;
+  if(occ===0)return'Vacant';
+  if(occ===beds.length)return'Fully Occupied';
+  return'Partially Occupied';
+}
+function statusBadge(s){
+  const map={'Vacant':'green','Partially Occupied':'orange','Fully Occupied':'red','available':'green','occupied':'red','reserved':'orange','active':'green','checkout':'gray','paid':'green','pending':'yellow','overdue':'red'};
+  const cls=map[s]||'gray';
+  return`<span class="badge badge-${cls}">${s}</span>`;
+}
+function populateFloorSelect(targetId,buildingSelectId){
+  const bid=document.getElementById(buildingSelectId)?.value;
+  const sel=document.getElementById(targetId);
+  if(!sel)return;
+  const floors=load('floors').filter(f=>!bid||f.buildingId===bid);
+  sel.innerHTML=floors.map(f=>`<option value="${f.id}">${getFloorName(f.id)}</option>`).join('')||'<option value="">No floors</option>';
+}
+function populateBuildingSelect(id){
+  const sel=document.getElementById(id);
+  if(!sel)return;
+  const buildings=load('buildings');
+  sel.innerHTML=buildings.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')||'<option value="">No buildings</option>';
+}
+
+/* ═══════════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════════ */
+function renderDashboard(){
+  const rooms=load('rooms'),beds=load('beds'),residents=load('residents').filter(r=>r.status==='active');
+  const payments=load('payments');
+  const totalBeds=beds.length,occupiedBeds=beds.filter(b=>b.status==='occupied').length,availBeds=beds.filter(b=>b.status==='available').length;
+  const vacantRooms=rooms.filter(r=>getRoomStatus(r.id)==='Vacant').length;
+  const now=new Date(),todayStr=today();
+  const thisMonth=now.toISOString().slice(0,7);
+  const monthRevenue=payments.filter(p=>p.month===thisMonth&&p.status==='paid').reduce((s,p)=>s+Number(p.amount||0)+Number(p.extra||0)-Number(p.discount||0),0);
+
+  // overdue & upcoming
+  const pending=payments.filter(p=>p.status==='pending'||p.status==='overdue');
+  let overdueCount=0,upcomingCount=0;
+  pending.forEach(p=>{
+    const res=load('residents').find(r=>r.id===p.residentId);
+    if(!res)return;
+    const dueDate=new Date(now.getFullYear(),now.getMonth(),res.dueDay||5);
+    if(dueDate<now)overdueCount++;else upcomingCount++;
+  });
+
+  document.getElementById('overdue-badge').textContent=overdueCount;
+
+  const occPct=totalBeds?Math.round(occupiedBeds/totalBeds*100):0;
+  const stats=[
+    {label:'Total Rooms',val:rooms.length,icon:'🚪',color:'blue'},
+    {label:'Total Beds',val:totalBeds,icon:'🛏️',color:'blue'},
+    {label:'Occupied Beds',val:occupiedBeds,icon:'🔴',color:'red'},
+    {label:'Available Beds',val:availBeds,icon:'🟢',color:'green'},
+    {label:'Active Residents',val:residents.length,icon:'👥',color:'orange'},
+    {label:'Vacant Rooms',val:vacantRooms,icon:'🏠',color:'yellow'},
+    {label:'Monthly Revenue',val:fmtMoney(monthRevenue),icon:'💰',color:'green'},
+    {label:'Overdue Payments',val:overdueCount,icon:'🚨',color:'red'},
+    {label:'Upcoming Payments',val:upcomingCount,icon:'⏰',color:'yellow'},
+    {label:'Occupancy %',val:occPct+'%',icon:'📊',color:'blue'}
+  ];
+  document.getElementById('stats-grid').innerHTML=stats.map(s=>`
+    <div class="stat-card ${s.color}">
+      <div class="stat-icon">${s.icon}</div>
+      <div class="stat-val">${s.val}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>`).join('');
+
+  // Occupancy chart (simple donut)
+  const ca=document.getElementById('occ-chart-area');
+  ca.innerHTML=`
+    <canvas id="donut-canvas" width="120" height="120"></canvas>
+    <div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="flex-row"><span style="width:12px;height:12px;background:var(--red);border-radius:3px;display:inline-block"></span><span style="font-size:.82rem">Occupied: ${occupiedBeds}</span></div>
+        <div class="flex-row"><span style="width:12px;height:12px;background:var(--green);border-radius:3px;display:inline-block"></span><span style="font-size:.82rem">Available: ${availBeds}</span></div>
+        <div class="flex-row"><span style="width:12px;height:12px;background:var(--orange);border-radius:3px;display:inline-block"></span><span style="font-size:.82rem">Reserved: ${beds.filter(b=>b.status==='reserved').length}</span></div>
+        <div style="margin-top:8px;font-size:1.4rem;font-family:'Syne',sans-serif;font-weight:800;color:var(--accent)">${occPct}%</div>
+        <div style="font-size:.75rem;color:var(--text2)">Occupancy Rate</div>
+      </div>
+    </div>`;
+  drawDonut(occupiedBeds,availBeds,beds.filter(b=>b.status==='reserved').length);
+
+  // Revenue bars (last 6 months)
+  const revEl=document.getElementById('revenue-bars');
+  const revData=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date();d.setMonth(d.getMonth()-i);
+    const m=d.toISOString().slice(0,7);
+    const rev=payments.filter(p=>p.month===m&&p.status==='paid').reduce((s,p)=>s+Number(p.amount||0),0);
+    revData.push({m,rev});
+  }
+  const maxRev=Math.max(...revData.map(x=>x.rev),1);
+  revEl.innerHTML=revData.map(x=>{
+    const pct=Math.round(x.rev/maxRev*100);
+    const mn=x.m.split('-');
+    const label=new Date(x.m+'-01').toLocaleString('en-IN',{month:'short',year:'2-digit'});
+    return`<div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;font-size:.78rem">
+        <span style="color:var(--text2)">${label}</span>
+        <span style="font-weight:600">${fmtMoney(x.rev)}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill green" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  // Upcoming & overdue lists
+  const resMap=Object.fromEntries(load('residents').map(r=>[r.id,r]));
+  const allPending=payments.filter(p=>p.status==='pending'||p.status==='overdue');
+  let upcoming=[],overdue=[];
+  allPending.forEach(p=>{
+    const res=resMap[p.residentId];if(!res)return;
+    const dueDate=new Date(now.getFullYear(),now.getMonth(),res.dueDay||5);
+    const item={name:res.name,room:getRoomNum(res.roomId),amount:res.rent,due:dueDate,month:p.month};
+    if(dueDate<now)overdue.push(item);else upcoming.push(item);
+  });
+  document.getElementById('upcoming-count').textContent=upcoming.length;
+  document.getElementById('overdue-count').textContent=overdue.length;
+  const remRow=(x,cls)=>`<div class="reminder-row">
+    <div class="reminder-avatar" style="background:var(--surface3)">${x.name[0]}</div>
+    <div class="reminder-info"><div class="reminder-name">${x.name}</div><div class="reminder-detail">Room ${x.room} · ${x.month}</div></div>
+    <div class="reminder-due ${cls}">${fmtMoney(x.amount)}</div>
+  </div>`;
+  document.getElementById('upcoming-list').innerHTML=upcoming.slice(0,5).map(x=>remRow(x,'badge-yellow')).join('')||(upcoming.length===0?'<div style="color:var(--text3);font-size:.82rem;padding:12px 0">No upcoming payments</div>':'');
+  document.getElementById('overdue-list').innerHTML=overdue.slice(0,5).map(x=>remRow(x,'badge-red')).join('')||(overdue.length===0?'<div style="color:var(--text3);font-size:.82rem;padding:12px 0">No overdue payments</div>':'');
+}
+
+function drawDonut(occ,avail,res){
+  const c=document.getElementById('donut-canvas');if(!c)return;
+  const ctx=c.getContext('2d');
+  const total=occ+avail+res||1;
+  const data=[{val:occ,color:'#f5365c'},{val:avail,color:'#2dce89'},{val:res,color:'#fb6340'}];
+  let start=-Math.PI/2;
+  ctx.clearRect(0,0,120,120);
+  data.forEach(d=>{
+    const slice=2*Math.PI*(d.val/total);
+    ctx.beginPath();ctx.moveTo(60,60);
+    ctx.arc(60,60,50,start,start+slice);
+    ctx.closePath();ctx.fillStyle=d.color;ctx.fill();
+    start+=slice;
+  });
+  ctx.beginPath();ctx.arc(60,60,30,0,Math.PI*2);
+  ctx.fillStyle='#161b22';ctx.fill();
+}
+
+/* ═══════════════════════════════════════════════
+   BUILDINGS
+═══════════════════════════════════════════════ */
+function renderBuildings(){
+  const buildings=load('buildings'),floors=load('floors'),rooms=load('rooms');
+  const el=document.getElementById('buildings-list');
+  if(!buildings.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">🏢</div><div class="empty-title">No Buildings Yet</div><div class="empty-desc">Add your first PG building to get started</div></div>`;return;}
+  el.innerHTML=buildings.map(b=>{
+    const bFloors=floors.filter(f=>f.buildingId===b.id);
+    return`<div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700">${b.name}</div>
+          <div style="font-size:.78rem;color:var(--text2);margin-top:2px">${b.address||'No address'}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <span class="info-chip">${bFloors.length} Floors</span>
+          <span class="info-chip">${rooms.filter(r=>r.buildingId===b.id).length} Rooms</span>
+          <button class="btn btn-danger btn-sm" onclick="deleteBuilding('${b.id}')">🗑</button>
+        </div>
+      </div>
+      ${bFloors.map(f=>{
+        const fRooms=rooms.filter(r=>r.floorId===f.id);
+        return`<div class="floor-block">
+          <div class="floor-header" onclick="toggleFloor(this)">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-weight:700">${getFloorName(f.id)}</span>
+              <span class="info-chip">${fRooms.length} Rooms</span>
+            </div>
+            <span>▾</span>
+          </div>
+          <div class="floor-body">
+            <div style="display:flex;flex-wrap:wrap;gap:10px">
+              ${fRooms.length?fRooms.map(r=>{
+                const st=getRoomStatus(r.id);
+                return`<div style="background:var(--surface3);border-radius:8px;padding:10px 14px;min-width:120px;cursor:pointer" onclick="nav('rooms')">
+                  <div style="font-weight:700">Room ${r.num}</div>
+                  <div style="font-size:.72rem;color:var(--text2)">${r.type}</div>
+                  ${statusBadge(st)}
+                </div>`;
+              }).join(''):'<div style="color:var(--text3);font-size:.82rem">No rooms on this floor</div>'}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+function toggleFloor(el){el.classList.toggle('open');el.nextElementSibling.classList.toggle('open');}
+function addBuilding(){
+  const name=document.getElementById('b-name').value.trim();
+  if(!name){toast('Building name required','error');return;}
+  const buildings=load('buildings');
+  buildings.push({id:uid(),name,address:document.getElementById('b-addr').value,floors:+document.getElementById('b-floors').value||1,notes:document.getElementById('b-notes').value});
+  save('buildings',buildings);
+  closeModal('modal-building');
+  ['b-name','b-addr','b-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('b-floors').value=1;
+  renderBuildings();
+  addAudit('Building Added',name);
+  toast('Building added!');
+}
+function deleteBuilding(id){
+  if(!confirm('Delete building and all its data?'))return;
+  save('buildings',load('buildings').filter(b=>b.id!==id));
+  save('floors',load('floors').filter(f=>f.buildingId!==id));
+  const rmIds=load('rooms').filter(r=>r.buildingId===id).map(r=>r.id);
+  save('rooms',load('rooms').filter(r=>r.buildingId!==id));
+  save('beds',load('beds').filter(b=>!rmIds.includes(b.roomId)));
+  renderBuildings();toast('Building deleted','info');
+}
+function addFloor(){
+  const bid=document.getElementById('fl-building').value;
+  const num=document.getElementById('fl-num').value;
+  if(!bid||num===''){toast('Select building and floor number','error');return;}
+  const floors=load('floors');
+  floors.push({id:uid(),buildingId:bid,num:+num,name:document.getElementById('fl-name').value});
+  save('floors',floors);
+  closeModal('modal-floor');
+  renderBuildings();
+  addAudit('Floor Added',`Floor ${num} in ${getBuildingName(bid)}`);
+  toast('Floor added!');
+}
+
+/* ═══════════════════════════════════════════════
+   ROOMS
+═══════════════════════════════════════════════ */
+function renderRooms(){
+  const rooms=load('rooms');const beds=load('beds');
+  const typeF=document.getElementById('room-filter-type')?.value||'';
+  const statF=document.getElementById('room-filter-status')?.value||'';
+  let filtered=rooms;
+  if(typeF)filtered=filtered.filter(r=>r.type===typeF);
+  if(statF)filtered=filtered.filter(r=>getRoomStatus(r.id)===statF);
+  const tbody=document.getElementById('rooms-tbody');
+  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🚪</div><div class="empty-title">No Rooms</div><div class="empty-desc">Add rooms using the button above</div></div></td></tr>`;return;}
+  tbody.innerHTML=filtered.map(r=>{
+    const rBeds=beds.filter(b=>b.roomId===r.id);
+    const occ=rBeds.filter(b=>b.status==='occupied').length;
+    const st=getRoomStatus(r.id);
+    return`<tr>
+      <td><strong>Room ${r.num}</strong></td>
+      <td><span style="font-size:.8rem">${getBuildingName(r.buildingId)}<br>${getFloorName(r.floorId)}</span></td>
+      <td>${r.type}</td>
+      <td>${rBeds.length}</td>
+      <td>${occ} / ${rBeds.length}</td>
+      <td>${fmtMoney(r.rent)}</td>
+      <td>${fmtMoney(r.deposit)}</td>
+      <td>${statusBadge(st)}</td>
+      <td><div class="td-actions">
+        <button class="btn btn-secondary btn-sm" onclick="nav('beds')">🛏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRoom('${r.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function addRoom(){
+  const bid=document.getElementById('r-building').value,fid=document.getElementById('r-floor').value;
+  const num=document.getElementById('r-num').value.trim(),type=document.getElementById('r-type').value;
+  if(!num){toast('Room number required','error');return;}
+  const rooms=load('rooms');
+  if(rooms.find(r=>r.num===num&&r.buildingId===bid)){toast('Room already exists in this building','error');return;}
+  const rid=uid();
+  rooms.push({id:rid,buildingId:bid,floorId:fid,num,type,rent:+document.getElementById('r-rent').value||0,deposit:+document.getElementById('r-deposit').value||0,notes:document.getElementById('r-notes').value});
+  save('rooms',rooms);
+  createBeds(rid,type);
+  closeModal('modal-room');
+  renderRooms();
+  addAudit('Room Added',`Room ${num}`);
+  toast('Room added with beds!');
+}
+function createBeds(roomId,type){
+  const sharing={'Single':1,'Double':2,'Triple':3,'Four Sharing':4}[type]||1;
+  const beds=load('beds');
+  for(let i=0;i<sharing;i++){
+    beds.push({id:uid(),roomId,label:String.fromCharCode(65+i),status:'available',residentId:null});
+  }
+  save('beds',beds);
+}
+function bulkAddRooms(){
+  const bid=document.getElementById('br-building').value,fid=document.getElementById('br-floor').value;
+  const from=+document.getElementById('br-from').value,to=+document.getElementById('br-to').value;
+  const type=document.getElementById('br-type').value;
+  if(!from||!to||from>to){toast('Enter valid room range','error');return;}
+  if(to-from>99){toast('Max 100 rooms at once','error');return;}
+  const rooms=load('rooms');
+  let added=0;
+  for(let n=from;n<=to;n++){
+    const num=String(n);
+    if(!rooms.find(r=>r.num===num&&r.buildingId===bid)){
+      const rid=uid();
+      rooms.push({id:rid,buildingId:bid,floorId:fid,num,type,rent:+document.getElementById('br-rent').value||0,deposit:+document.getElementById('br-deposit').value||0,notes:''});
+      createBeds(rid,type);added++;
+    }
+  }
+  save('rooms',rooms);
+  closeModal('modal-bulk-rooms');renderRooms();
+  addAudit('Bulk Rooms',`${added} rooms generated (${from}–${to})`);
+  toast(`${added} rooms created!`);
+}
+function deleteRoom(id){
+  if(!confirm('Delete room and all its beds/data?'))return;
+  save('rooms',load('rooms').filter(r=>r.id!==id));
+  save('beds',load('beds').filter(b=>b.roomId!==id));
+  renderRooms();toast('Room deleted','info');
+}
+
+/* ═══════════════════════════════════════════════
+   BEDS
+═══════════════════════════════════════════════ */
+function renderBeds(){
+  const buildingSel=document.getElementById('bed-filter-building');
+  const floorSel=document.getElementById('bed-filter-floor');
+  // populate building select
+  const buildings=load('buildings');
+  const curB=buildingSel.value;
+  buildingSel.innerHTML='<option value="">All Buildings</option>'+buildings.map(b=>`<option value="${b.id}"${b.id===curB?' selected':''}>${b.name}</option>`).join('');
+  const floors=load('floors').filter(f=>!buildingSel.value||f.buildingId===buildingSel.value);
+  const curF=floorSel.value;
+  floorSel.innerHTML='<option value="">All Floors</option>'+floors.map(f=>`<option value="${f.id}"${f.id===curF?' selected':''}>${getFloorName(f.id)} (${getBuildingName(f.buildingId)})</option>`).join('');
+
+  const rooms=load('rooms').filter(r=>(!buildingSel.value||r.buildingId===buildingSel.value)&&(!floorSel.value||r.floorId===floorSel.value));
+  const beds=load('beds');
+  const container=document.getElementById('bed-floors-container');
+  if(!rooms.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">🛏️</div><div class="empty-title">No Rooms</div><div class="empty-desc">Add rooms first to see bed layout</div></div>`;return;}
+
+  // Group by floor
+  const floorMap={};
+  rooms.forEach(r=>{
+    if(!floorMap[r.floorId])floorMap[r.floorId]=[];
+    floorMap[r.floorId].push(r);
+  });
+
+  container.innerHTML=Object.entries(floorMap).map(([fid,fRooms])=>`
+    <div class="floor-block">
+      <div class="floor-header open" onclick="toggleFloor(this)">
+        <div>${getFloorName(fid)} — ${getBuildingName(fRooms[0].buildingId)}</div>
+        <div style="display:flex;gap:8px">
+          <span class="info-chip">${fRooms.length} rooms</span>
+          <span class="info-chip badge-green">${beds.filter(b=>fRooms.map(r=>r.id).includes(b.roomId)&&b.status==='available').length} avail</span>
+        </div>
+      </div>
+      <div class="floor-body open">
+        <div style="display:flex;flex-wrap:wrap;gap:12px">
+          ${fRooms.map(room=>{
+            const rBeds=beds.filter(b=>b.roomId===room.id);
+            const st=getRoomStatus(room.id);
+            return`<div class="room-card">
+              <div class="room-card-header">
+                <div>
+                  <div class="room-num">Room ${room.num}</div>
+                  <div style="font-size:.72rem;color:var(--text2)">${room.type}</div>
+                </div>
+                ${statusBadge(st)}
+              </div>
+              <div class="beds-row">
+                ${rBeds.map(bed=>{
+                  const res=bed.residentId?getResidentName(bed.residentId):'';
+                  return`<div class="bed-slot ${bed.status}" onclick="clickBed('${bed.id}','${room.id}')" title="Bed ${bed.label}${res?' – '+res:''}">
+                    <div class="bed-icon">🛏</div>
+                    <div>${bed.label}</div>
+                  </div>`;
+                }).join('')}
+              </div>
+              ${room.rent?`<div style="font-size:.72rem;color:var(--text2);margin-top:8px">${fmtMoney(room.rent)}/bed/mo</div>`:''}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function clickBed(bedId,roomId){
+  const beds=load('beds');
+  const bed=beds.find(b=>b.id===bedId);
+  if(!bed)return;
+  if(bed.status==='occupied'){
+    const res=load('residents').find(r=>r.id===bed.residentId);
+    if(res)toast(`Occupied by: ${res.name} (${res.mobile})`,'info');
+    return;
+  }
+  if(bed.status==='reserved'){toast('This bed is reserved','info');return;}
+  // Open add resident modal with pre-filled room/bed
+  openAddResident(roomId,bedId);
+}
+
+/* ═══════════════════════════════════════════════
+   RESIDENTS
+═══════════════════════════════════════════════ */
+let editResidentId=null;
+function openAddResident(preRoom,preBed){
+  editResidentId=null;
+  document.getElementById('resident-modal-title').textContent='Add Resident';
+  document.getElementById('save-resident-btn').textContent='Add Resident';
+  // clear form
+  ['res-name','res-mobile','res-alt-mobile','res-email','res-dob','res-aadhaar',
+   'res-ec-name','res-ec-num','res-addr','res-city','res-state','res-pin',
+   'res-company','res-empid','res-workloc','res-join','res-leave','res-rent',
+   'res-deposit-amt','res-advance'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('res-join').value=today();
+  document.getElementById('res-dueday').value=5;
+  populateBuildingSelect('res-building');
+  populateResRoomSelect(preRoom);
+  setTimeout(()=>{
+    if(preRoom){document.getElementById('res-room').value=preRoom;populateResBedSelect();}
+    if(preBed)setTimeout(()=>{document.getElementById('res-bed').value=preBed;},50);
+  },50);
+  openModal('modal-resident');
+}
+function populateResRoomSelect(preRoom){
+  const bid=document.getElementById('res-building')?.value;
+  const rooms=load('rooms').filter(r=>!bid||r.buildingId===bid);
+  const sel=document.getElementById('res-room');
+  if(!sel)return;
+  sel.innerHTML=rooms.map(r=>`<option value="${r.id}"${r.id===preRoom?' selected':''}>Room ${r.num} (${r.type}) – ${getBuildingName(r.buildingId)}</option>`).join('')||'<option>No rooms</option>';
+  populateResBedSelect();
+  // auto-fill rent
+  const room=rooms.find(r=>r.id===(preRoom||rooms[0]?.id));
+  if(room&&!editResidentId){document.getElementById('res-rent').value=room.rent||'';document.getElementById('res-deposit-amt').value=room.deposit||'';}
+}
+function populateResBedSelect(){
+  const roomId=document.getElementById('res-room')?.value;
+  const sel=document.getElementById('res-bed');if(!sel)return;
+  const beds=load('beds').filter(b=>b.roomId===roomId&&(b.status==='available'||b.status==='reserved'));
+  sel.innerHTML=beds.map(b=>`<option value="${b.id}">Bed ${b.label} (${b.status})</option>`).join('')||'<option value="">No available beds</option>';
+  const room=load('rooms').find(r=>r.id===roomId);
+  if(room&&!editResidentId){document.getElementById('res-rent').value=room.rent||'';document.getElementById('res-deposit-amt').value=room.deposit||'';}
+}
+function saveResident(){
+  const name=document.getElementById('res-name').value.trim();
+  const mobile=document.getElementById('res-mobile').value.trim();
+  const roomId=document.getElementById('res-room').value;
+  const bedId=document.getElementById('res-bed').value;
+  const joinDate=document.getElementById('res-join').value;
+  if(!name||!mobile||!roomId||!bedId){toast('Name, mobile, room and bed are required','error');return;}
+
+  const residents=load('residents');const beds=load('beds');
+
+  if(editResidentId){
+    const idx=residents.findIndex(r=>r.id===editResidentId);
+    if(idx<0)return;
+    const old=residents[idx];
+    // if bed changed
+    if(old.bedId!==bedId){
+      const oldBed=beds.find(b=>b.id===old.bedId);
+      if(oldBed){oldBed.status='available';oldBed.residentId=null;}
+      const newBed=beds.find(b=>b.id===bedId);
+      if(newBed){newBed.status='occupied';newBed.residentId=editResidentId;}
+    }
+    Object.assign(residents[idx],getResFormData(editResidentId));
+    save('residents',residents);save('beds',beds);
+    closeModal('modal-resident');renderResidents();
+    addAudit('Resident Updated',name);toast('Resident updated!');
+  }else{
+    const rid=uid();
+    residents.push({id:rid,...getResFormData(rid),status:'active'});
+    const bed=beds.find(b=>b.id===bedId);
+    if(bed){bed.status='occupied';bed.residentId=rid;}
+    save('residents',residents);save('beds',beds);
+    // create pending payment
+    const payments=load('payments');
+    const month=new Date().toISOString().slice(0,7);
+    payments.push({id:uid(),residentId:rid,month,amount:+document.getElementById('res-rent').value||0,extra:0,discount:0,mode:'',paidDate:'',ref:'',notes:'',status:'pending'});
+    save('payments',payments);
+    closeModal('modal-resident');renderResidents();
+    addAudit('Resident Added',`${name} to Room ${getRoomNum(roomId)} Bed ${getBedLabel(bedId)}`);
+    toast('Resident added!');
+  }
+}
+function getResFormData(id){
+  return{
+    id,
+    name:document.getElementById('res-name').value.trim(),
+    mobile:document.getElementById('res-mobile').value.trim(),
+    altMobile:document.getElementById('res-alt-mobile').value,
+    email:document.getElementById('res-email').value,
+    dob:document.getElementById('res-dob').value,
+    gender:document.getElementById('res-gender').value,
+    aadhaar:document.getElementById('res-aadhaar').value,
+    ecName:document.getElementById('res-ec-name').value,
+    ecNum:document.getElementById('res-ec-num').value,
+    addr:document.getElementById('res-addr').value,
+    city:document.getElementById('res-city').value,
+    state:document.getElementById('res-state').value,
+    pin:document.getElementById('res-pin').value,
+    company:document.getElementById('res-company').value,
+    empId:document.getElementById('res-empid').value,
+    workLoc:document.getElementById('res-workloc').value,
+    joinDate:document.getElementById('res-join').value,
+    leaveDate:document.getElementById('res-leave').value,
+    roomId:document.getElementById('res-room').value,
+    bedId:document.getElementById('res-bed').value,
+    rent:+document.getElementById('res-rent').value||0,
+    deposit:+document.getElementById('res-deposit-amt').value||0,
+    advance:+document.getElementById('res-advance').value||0,
+    dueDay:+document.getElementById('res-dueday').value||5,
+  };
+}
+function renderResidents(){
+  const residents=load('residents');
+  const q=(document.getElementById('res-search')?.value||'').toLowerCase();
+  const flt=document.getElementById('res-filter')?.value||'';
+  let list=residents;
+  if(q)list=list.filter(r=>r.name.toLowerCase().includes(q)||r.mobile.includes(q)||getRoomNum(r.roomId).includes(q)||r.aadhaar?.includes(q));
+  if(flt)list=list.filter(r=>r.status===flt);
+  const tbody=document.getElementById('residents-tbody');
+  if(!list.length){tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">No Residents</div></div></td></tr>`;return;}
+  tbody.innerHTML=list.map(r=>{
+    const dueDt=r.dueDay?`${r.dueDay}th`:'—';
+    return`<tr>
+      <td><div style="font-weight:600">${r.name}</div><div style="font-size:.75rem;color:var(--text2)">${r.gender}</div></td>
+      <td>${r.mobile}</td>
+      <td>Room ${getRoomNum(r.roomId)} / Bed ${getBedLabel(r.bedId)}</td>
+      <td>${fmtDate(r.joinDate)}</td>
+      <td>${fmtMoney(r.rent)}</td>
+      <td>${dueDt}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td><div class="td-actions">
+        <button class="btn btn-secondary btn-sm" onclick="editResident('${r.id}')">✏️</button>
+        <button class="btn btn-secondary btn-sm" onclick="viewResident('${r.id}')">👁</button>
+        ${r.status==='active'?`<button class="btn btn-danger btn-sm" onclick="nav('checkout');setTimeout(()=>{document.getElementById('checkout-resident-select').value='${r.id}';showCheckoutPreview()},100)">🚶 Checkout</button>`:''}
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function editResident(id){
+  editResidentId=id;
+  const res=load('residents').find(r=>r.id===id);if(!res)return;
+  document.getElementById('resident-modal-title').textContent='Edit Resident';
+  document.getElementById('save-resident-btn').textContent='Update Resident';
+  populateBuildingSelect('res-building');
+  const fields={
+    'res-name':res.name,'res-mobile':res.mobile,'res-alt-mobile':res.altMobile||'',
+    'res-email':res.email||'','res-dob':res.dob||'','res-aadhaar':res.aadhaar||'',
+    'res-ec-name':res.ecName||'','res-ec-num':res.ecNum||'','res-addr':res.addr||'',
+    'res-city':res.city||'','res-state':res.state||'','res-pin':res.pin||'',
+    'res-company':res.company||'','res-empid':res.empId||'','res-workloc':res.workLoc||'',
+    'res-join':res.joinDate||'','res-leave':res.leaveDate||'','res-rent':res.rent||'',
+    'res-deposit-amt':res.deposit||'','res-advance':res.advance||'','res-dueday':res.dueDay||5
+  };
+  Object.entries(fields).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v;});
+  document.getElementById('res-gender').value=res.gender||'Male';
+  populateResRoomSelect(res.roomId);
+  setTimeout(()=>{
+    document.getElementById('res-room').value=res.roomId;
+    populateResBedSelect();
+    setTimeout(()=>{
+      const bedSel=document.getElementById('res-bed');
+      const beds=load('beds').filter(b=>b.roomId===res.roomId&&(b.status==='available'||b.id===res.bedId));
+      bedSel.innerHTML=beds.map(b=>`<option value="${b.id}"${b.id===res.bedId?' selected':''}>Bed ${b.label}</option>`).join('');
+    },50);
+  },50);
+  openModal('modal-resident');
+}
+function viewResident(id){
+  const res=load('residents').find(r=>r.id===id);if(!res)return;
+  const payments=load('payments').filter(p=>p.residentId===id);
+  const totalPaid=payments.filter(p=>p.status==='paid').reduce((s,p)=>s+Number(p.amount),0);
+  alert(`=== ${res.name} ===\nMobile: ${res.mobile}\nRoom: ${getRoomNum(res.roomId)} | Bed: ${getBedLabel(res.bedId)}\nJoined: ${fmtDate(res.joinDate)}\nRent: ${fmtMoney(res.rent)}/mo\nDeposit: ${fmtMoney(res.deposit)}\nTotal Paid: ${fmtMoney(totalPaid)}\nCompany: ${res.company||'—'}\nEmergency: ${res.ecName||'—'} (${res.ecNum||'—'})`);
+}
+
+/* ═══════════════════════════════════════════════
+   TRANSFERS
+═══════════════════════════════════════════════ */
+function renderTransfers(){
+  const transfers=load('transfers');
+  const tbody=document.getElementById('transfer-tbody');
+  if(!transfers.length){tbody.innerHTML=`<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🔄</div><div class="empty-title">No Transfers</div></div></td></tr>`;return;}
+  tbody.innerHTML=transfers.map(t=>`<tr>
+    <td>${getResidentName(t.residentId)}</td>
+    <td>Room ${t.fromRoom} / Bed ${t.fromBed}</td>
+    <td>Room ${t.toRoom} / Bed ${t.toBed}</td>
+    <td>${fmtDate(t.date)}</td>
+    <td style="font-size:.78rem;color:var(--text2)">${t.reason||'—'}</td>
+  </tr>`).join('');
+  const tl=document.getElementById('transfer-timeline');
+  tl.innerHTML=transfers.slice(0,8).map(t=>`<div class="tl-item">
+    <div class="tl-date">${fmtDate(t.date)}</div>
+    <div class="tl-title">${getResidentName(t.residentId)}</div>
+    <div class="tl-desc">Room ${t.fromRoom}→${t.toRoom} | Bed ${t.fromBed}→${t.toBed}${t.reason?' — '+t.reason:''}</div>
+  </div>`).join('');
+}
+function doTransfer(){
+  const resId=document.getElementById('tr-resident').value;
+  const newRoomId=document.getElementById('tr-room').value;
+  const newBedId=document.getElementById('tr-bed').value;
+  const date=document.getElementById('tr-date').value;
+  if(!resId||!newRoomId||!newBedId||!date){toast('Fill all required fields','error');return;}
+  const residents=load('residents');const beds=load('beds');
+  const res=residents.find(r=>r.id===resId);if(!res)return;
+  const oldBed=beds.find(b=>b.id===res.bedId);
+  const newBed=beds.find(b=>b.id===newBedId);
+  if(!newBed||newBed.status!=='available'){toast('Selected bed is not available','error');return;}
+  const oldRoom=getRoomNum(res.roomId),oldBedLabel=getBedLabel(res.bedId);
+  if(oldBed){oldBed.status='available';oldBed.residentId=null;}
+  newBed.status='occupied';newBed.residentId=resId;
+  res.roomId=newRoomId;res.bedId=newBedId;
+  save('residents',residents);save('beds',beds);
+  const transfers=load('transfers');
+  transfers.unshift({id:uid(),residentId:resId,fromRoom:oldRoom,fromBed:oldBedLabel,toRoom:getRoomNum(newRoomId),toBed:getBedLabel(newBedId),date,reason:document.getElementById('tr-reason').value});
+  save('transfers',transfers);
+  closeModal('modal-transfer');renderTransfers();
+  addAudit('Transfer',`${res.name}: Room ${oldRoom}→${getRoomNum(newRoomId)}`);
+  toast('Transfer completed!');
+}
+function fillTransferFrom(){
+  const resId=document.getElementById('tr-resident').value;
+  const res=load('residents').find(r=>r.id===resId);
+  if(!res)return;
+  document.getElementById('tr-from-room').value='Room '+getRoomNum(res.roomId);
+  document.getElementById('tr-from-bed').value='Bed '+getBedLabel(res.bedId);
+}
+function populateTrRoomSelect(){
+  const bid=document.getElementById('tr-building').value;
+  const rooms=load('rooms').filter(r=>!bid||r.buildingId===bid);
+  document.getElementById('tr-room').innerHTML=rooms.map(r=>`<option value="${r.id}">Room ${r.num} (${r.type})</option>`).join('');
+  populateTrBedSelect();
+}
+function populateTrBedSelect(){
+  const roomId=document.getElementById('tr-room').value;
+  const beds=load('beds').filter(b=>b.roomId===roomId&&b.status==='available');
+  document.getElementById('tr-bed').innerHTML=beds.map(b=>`<option value="${b.id}">Bed ${b.label}</option>`).join('')||'<option value="">No available beds</option>';
+}
+
+/* ═══════════════════════════════════════════════
+   CHECKOUT
+═══════════════════════════════════════════════ */
+function renderCheckout(){
+  const active=load('residents').filter(r=>r.status==='active');
+  const sel=document.getElementById('checkout-resident-select');
+  sel.innerHTML='<option value="">-- Select Active Resident --</option>'+active.map(r=>`<option value="${r.id}">${r.name} (Room ${getRoomNum(r.roomId)})</option>`).join('');
+  const checkouts=load('checkouts');
+  const tbody=document.getElementById('checkout-tbody');
+  tbody.innerHTML=checkouts.map(c=>`<tr>
+    <td>${c.name}</td><td>Room ${c.room} / Bed ${c.bed}</td>
+    <td>${fmtDate(c.date)}</td><td>${fmtMoney(c.duesPaid)}</td>
+    <td>${fmtMoney(c.depositRefund)}</td>
+    <td><span class="badge badge-green">Settled</span></td>
+  </tr>`).join('')||`<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🚶</div><div class="empty-title">No Checkouts</div></div></td></tr>`;
+}
+function showCheckoutPreview(){
+  const resId=document.getElementById('checkout-resident-select').value;
+  const prev=document.getElementById('checkout-preview');
+  if(!resId){prev.innerHTML='';return;}
+  const res=load('residents').find(r=>r.id===resId);if(!res)return;
+  const payments=load('payments').filter(p=>p.residentId===resId&&p.status==='pending');
+  const totalDues=payments.reduce((s,p)=>s+Number(p.amount),0);
+  const refund=Math.max(0,res.deposit-totalDues);
+  prev.innerHTML=`
+    <div class="card" style="max-width:500px">
+      <div class="card-title">Checkout Summary</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="flex-row"><span style="color:var(--text2);flex:1">Resident</span><strong>${res.name}</strong></div>
+        <div class="flex-row"><span style="color:var(--text2);flex:1">Room / Bed</span><strong>Room ${getRoomNum(res.roomId)} / Bed ${getBedLabel(res.bedId)}</strong></div>
+        <div class="flex-row"><span style="color:var(--text2);flex:1">Security Deposit</span><strong>${fmtMoney(res.deposit)}</strong></div>
+        <div class="flex-row"><span style="color:var(--text2);flex:1">Pending Dues</span><strong style="color:var(--red)">${fmtMoney(totalDues)}</strong></div>
+        <div class="flex-row" style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px"><span style="color:var(--text2);flex:1">Refundable Deposit</span><strong style="color:var(--green);font-size:1.1rem">${fmtMoney(refund)}</strong></div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px">
+        <button class="btn btn-danger" onclick="confirmCheckout('${resId}',${totalDues},${refund})">✅ Confirm Checkout</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('checkout-preview').innerHTML=''">Cancel</button>
+      </div>
+    </div>`;
+}
+function confirmCheckout(resId,dues,refund){
+  if(!confirm('Confirm checkout? This will free the bed.'))return;
+  const residents=load('residents');const beds=load('beds');
+  const res=residents.find(r=>r.id===resId);if(!res)return;
+  const bed=beds.find(b=>b.id===res.bedId);
+  if(bed){bed.status='available';bed.residentId=null;}
+  const room=getRoomNum(res.roomId),bedLabel=getBedLabel(res.bedId);
+  res.status='checkout';res.leaveDate=today();
+  save('residents',residents);save('beds',beds);
+  const checkouts=load('checkouts');
+  checkouts.unshift({id:uid(),residentId:resId,name:res.name,room,bed:bedLabel,date:today(),duesPaid:dues,depositRefund:refund});
+  save('checkouts',checkouts);
+  document.getElementById('checkout-preview').innerHTML='';
+  renderCheckout();
+  addAudit('Checkout',`${res.name} from Room ${room}`);
+  toast(`${res.name} checked out. Refund: ${fmtMoney(refund)}`);
+}
+
+/* ═══════════════════════════════════════════════
+   PAYMENTS
+═══════════════════════════════════════════════ */
+function renderPayments(){
+  const payments=load('payments');
+  const flt=document.getElementById('pay-filter')?.value||'';
+  let list=flt?payments.filter(p=>p.status===flt):payments;
+  list=list.slice().reverse();
+  const tbody=document.getElementById('payments-tbody');
+  if(!list.length){tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">💳</div><div class="empty-title">No Payments</div></div></td></tr>`;return;}
+  tbody.innerHTML=list.map(p=>{
+    const res=load('residents').find(r=>r.id===p.residentId);
+    return`<tr>
+      <td>${res?.name||'—'}</td>
+      <td>${res?`Room ${getRoomNum(res.roomId)}`:'—'}</td>
+      <td>${p.month||'—'}</td>
+      <td>${fmtMoney(+p.amount+(+p.extra||0)-(+p.discount||0))}</td>
+      <td>${p.mode||'—'}</td>
+      <td>${fmtDate(p.paidDate)||'—'}</td>
+      <td>${statusBadge(p.status)}</td>
+      <td><div class="td-actions">
+        ${p.status==='pending'||p.status==='overdue'?`<button class="btn btn-success btn-sm" onclick="markPaid('${p.id}')">✅ Mark Paid</button>`:''}
+        <button class="btn btn-secondary btn-sm" onclick="viewReceipt('${p.id}')">🧾</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePayment('${p.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function fillPaymentInfo(){
+  const resId=document.getElementById('pay-resident').value;
+  const res=load('residents').find(r=>r.id===resId);
+  if(res)document.getElementById('pay-amount').value=res.rent;
+}
+function recordPayment(){
+  const resId=document.getElementById('pay-resident').value;
+  const month=document.getElementById('pay-month').value;
+  const amount=+document.getElementById('pay-amount').value;
+  const mode=document.getElementById('pay-mode').value;
+  const date=document.getElementById('pay-date').value;
+  if(!resId||!month||!amount||!date){toast('Fill all required fields','error');return;}
+  const payments=load('payments');
+  // check if pending exists for this month
+  const existing=payments.find(p=>p.residentId===resId&&p.month===month&&p.status==='pending');
+  if(existing){
+    existing.amount=amount;existing.extra=+document.getElementById('pay-extra').value||0;
+    existing.discount=+document.getElementById('pay-discount').value||0;
+    existing.mode=mode;existing.paidDate=date;existing.ref=document.getElementById('pay-ref').value;
+    existing.notes=document.getElementById('pay-notes').value;existing.status='paid';
+  }else{
+    payments.push({id:uid(),residentId:resId,month,amount,extra:+document.getElementById('pay-extra').value||0,discount:+document.getElementById('pay-discount').value||0,mode,paidDate:date,ref:document.getElementById('pay-ref').value,notes:document.getElementById('pay-notes').value,status:'paid'});
+  }
+  save('payments',payments);
+  closeModal('modal-payment');renderPayments();
+  addAudit('Payment Recorded',`${fmtMoney(amount)} from ${getResidentName(resId)} for ${month}`);
+  toast('Payment recorded!');
+}
+function markPaid(id){
+  const payments=load('payments');
+  const p=payments.find(x=>x.id===id);if(!p)return;
+  p.status='paid';p.paidDate=today();p.mode=p.mode||'Cash';
+  save('payments',payments);renderPayments();
+  addAudit('Payment Marked Paid',`${getResidentName(p.residentId)} – ${p.month}`);
+  toast('Marked as paid!');
+}
+function deletePayment(id){
+  if(!confirm('Delete this payment record?'))return;
+  save('payments',load('payments').filter(p=>p.id!==id));
+  renderPayments();toast('Deleted','info');
+}
+function viewReceipt(id){
+  const p=load('payments').find(x=>x.id===id);if(!p)return;
+  const res=load('residents').find(r=>r.id===p.residentId);
+  const net=+p.amount+(+p.extra||0)-(+p.discount||0);
+  document.getElementById('receipt-content').innerHTML=`
+    <div class="receipt">
+      <div class="receipt-header">
+        <div style="font-size:1.3rem;font-weight:800;margin-bottom:4px">PG Manager</div>
+        <div style="font-size:.8rem;color:#666">Hyderabad | Payment Receipt</div>
+        <div style="font-size:.75rem;color:#888;margin-top:4px">Receipt #${p.id.toUpperCase().slice(0,8)}</div>
+      </div>
+      <div class="receipt-row"><span>Resident</span><strong>${res?.name||'—'}</strong></div>
+      <div class="receipt-row"><span>Room / Bed</span><span>${res?`Room ${getRoomNum(res.roomId)} / Bed ${getBedLabel(res.bedId)}`:'—'}</span></div>
+      <div class="receipt-row"><span>Month</span><span>${p.month}</span></div>
+      <div class="receipt-row"><span>Rent Amount</span><span>${fmtMoney(p.amount)}</span></div>
+      ${p.extra?`<div class="receipt-row"><span>Extra Charges</span><span>${fmtMoney(p.extra)}</span></div>`:''}
+      ${p.discount?`<div class="receipt-row"><span>Discount</span><span>- ${fmtMoney(p.discount)}</span></div>`:''}
+      <div class="receipt-row total"><span>Total Paid</span><span>${fmtMoney(net)}</span></div>
+      <div class="receipt-row"><span>Payment Mode</span><span>${p.mode||'—'}</span></div>
+      <div class="receipt-row"><span>Date</span><span>${fmtDate(p.paidDate)}</span></div>
+      ${p.ref?`<div class="receipt-row"><span>Reference</span><span>${p.ref}</span></div>`:''}
+    </div>`;
+  openModal('modal-receipt');
+}
+function printReceipt(){window.print();}
+
+/* ═══════════════════════════════════════════════
+   REMINDERS
+═══════════════════════════════════════════════ */
+function renderReminders(){
+  const now=new Date();
+  const residents=load('residents').filter(r=>r.status==='active');
+  const payments=load('payments');
+  const thisMonth=now.toISOString().slice(0,7);
+  let paid=0,todayDue=[],upcoming=[],overdueList=[];
+  residents.forEach(res=>{
+    const monthPay=payments.find(p=>p.residentId===res.id&&p.month===thisMonth);
+    if(!monthPay||monthPay.status==='paid'){paid++;return;}
+    const dueDate=new Date(now.getFullYear(),now.getMonth(),res.dueDay||5);
+    const diff=Math.ceil((dueDate-now)/(1000*60*60*24));
+    const item={name:res.name,room:getRoomNum(res.roomId),rent:res.rent,dueDate,diff};
+    if(dueDate<now){overdueList.push(item);}
+    else if(diff<=2){todayDue.push(item);}
+    else if(diff<=7){upcoming.push(item);}
+  });
+  document.getElementById('r-paid').textContent=paid;
+  document.getElementById('r-today').textContent=todayDue.length;
+  document.getElementById('r-7days').textContent=upcoming.length;
+  document.getElementById('r-overdue').textContent=overdueList.length;
+
+  const remItem=(x,cls,label)=>`<div class="reminder-row">
+    <div class="reminder-avatar">${x.name[0]}</div>
+    <div class="reminder-info"><div class="reminder-name">${x.name}</div><div class="reminder-detail">Room ${x.room} · Due: ${fmtDate(x.dueDate)}</div></div>
+    <div class="reminder-due"><span class="badge badge-${cls}">${label}</span><div style="font-size:.78rem;margin-top:3px">${fmtMoney(x.rent)}</div></div>
+  </div>`;
+
+  const today2=document.getElementById('rem-today-list');
+  today2.innerHTML=todayDue.map(x=>remItem(x,'yellow',x.diff===0?'Today':`${x.diff}d`)).join('')||'<div style="color:var(--text3);font-size:.82rem;padding:8px 0">None</div>';
+  const over=document.getElementById('rem-overdue-list');
+  over.innerHTML=overdueList.map(x=>remItem(x,'red',`${Math.abs(x.diff)}d overdue`)).join('')||'<div style="color:var(--text3);font-size:.82rem;padding:8px 0">No overdue payments 🎉</div>';
+  const up=document.getElementById('rem-upcoming-list');
+  up.innerHTML=upcoming.map(x=>remItem(x,'blue',`in ${x.diff}d`)).join('')||'<div style="color:var(--text3);font-size:.82rem;padding:8px 0">No upcoming in 7 days</div>';
+}
+
+/* ═══════════════════════════════════════════════
+   REPORTS
+═══════════════════════════════════════════════ */
+let currentReport='occupancy';
+function switchReportTab(type,el){
+  if(!el)return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  currentReport=type;
+  generateReport(type);
+}
+function generateReport(type){
+  const area=document.getElementById('report-area');
+  const rooms=load('rooms'),beds=load('beds'),residents=load('residents'),payments=load('payments'),transfers=load('transfers');
+
+  let html=`<div style="display:flex;gap:10px;margin-bottom:16px;justify-content:flex-end">
+    <button class="btn btn-secondary btn-sm" onclick="exportCSV('${type}')">⬇️ Export CSV</button>
+  </div>`;
+
+  if(type==='occupancy'){
+    html+=`<div class="table-wrap"><table><thead><tr><th>Room</th><th>Building</th><th>Type</th><th>Total Beds</th><th>Occupied</th><th>Available</th><th>Occupancy %</th><th>Status</th></tr></thead><tbody>`;
+    rooms.forEach(r=>{
+      const rb=beds.filter(b=>b.roomId===r.id);
+      const occ=rb.filter(b=>b.status==='occupied').length;
+      const pct=rb.length?Math.round(occ/rb.length*100):0;
+      html+=`<tr><td>Room ${r.num}</td><td>${getBuildingName(r.buildingId)}</td><td>${r.type}</td><td>${rb.length}</td><td>${occ}</td><td>${rb.length-occ}</td><td><div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="flex:1"><div class="progress-fill ${pct>80?'red':pct>40?'orange':'green'}" style="width:${pct}%"></div></div>${pct}%</div></td><td>${statusBadge(getRoomStatus(r.id))}</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }else if(type==='collection'){
+    html+=`<div class="table-wrap"><table><thead><tr><th>Month</th><th>Resident</th><th>Room</th><th>Amount</th><th>Mode</th><th>Paid On</th><th>Status</th></tr></thead><tbody>`;
+    payments.slice().reverse().forEach(p=>{
+      const res=residents.find(r=>r.id===p.residentId);
+      html+=`<tr><td>${p.month}</td><td>${res?.name||'—'}</td><td>${res?'Room '+getRoomNum(res.roomId):'—'}</td><td>${fmtMoney(p.amount)}</td><td>${p.mode||'—'}</td><td>${fmtDate(p.paidDate)}</td><td>${statusBadge(p.status)}</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }else if(type==='residents'){
+    html+=`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Mobile</th><th>Room/Bed</th><th>Joining</th><th>Rent</th><th>Status</th></tr></thead><tbody>`;
+    residents.forEach(r=>{
+      html+=`<tr><td>${r.name}</td><td>${r.mobile}</td><td>Room ${getRoomNum(r.roomId)} / Bed ${getBedLabel(r.bedId)}</td><td>${fmtDate(r.joinDate)}</td><td>${fmtMoney(r.rent)}</td><td>${statusBadge(r.status)}</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }else if(type==='vacancy'){
+    const vacant=rooms.filter(r=>getRoomStatus(r.id)==='Vacant');
+    html+=`<div style="margin-bottom:12px"><span class="badge badge-green">${vacant.length} Vacant Rooms</span></div>`;
+    html+=`<div class="table-wrap"><table><thead><tr><th>Room</th><th>Building/Floor</th><th>Type</th><th>Beds</th><th>Rent/Bed</th><th>Status</th></tr></thead><tbody>`;
+    vacant.forEach(r=>{
+      html+=`<tr><td>Room ${r.num}</td><td>${getBuildingName(r.buildingId)}<br>${getFloorName(r.floorId)}</td><td>${r.type}</td><td>${beds.filter(b=>b.roomId===r.id).length}</td><td>${fmtMoney(r.rent)}</td><td>${statusBadge('Vacant')}</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }else if(type==='due'){
+    const pending=payments.filter(p=>p.status==='pending'||p.status==='overdue');
+    html+=`<div class="table-wrap"><table><thead><tr><th>Resident</th><th>Room</th><th>Month</th><th>Amount Due</th><th>Due Day</th><th>Status</th></tr></thead><tbody>`;
+    pending.forEach(p=>{
+      const res=residents.find(r=>r.id===p.residentId);
+      html+=`<tr><td>${res?.name||'—'}</td><td>${res?'Room '+getRoomNum(res.roomId):'—'}</td><td>${p.month}</td><td>${fmtMoney(p.amount)}</td><td>${res?.dueDay||'—'}th</td><td>${statusBadge(p.status)}</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }else if(type==='transfer-history'){
+    html+=`<div class="table-wrap"><table><thead><tr><th>Resident</th><th>From Room</th><th>From Bed</th><th>To Room</th><th>To Bed</th><th>Date</th><th>Reason</th></tr></thead><tbody>`;
+    transfers.forEach(t=>{
+      html+=`<tr><td>${getResidentName(t.residentId)}</td><td>${t.fromRoom}</td><td>${t.fromBed}</td><td>${t.toRoom}</td><td>${t.toBed}</td><td>${fmtDate(t.date)}</td><td>${t.reason||'—'}</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }
+  area.innerHTML=html;
+}
+function exportCSV(type){
+  const rows=document.querySelectorAll('#report-area table tr');
+  if(!rows.length){toast('No data to export','error');return;}
+  const csv=Array.from(rows).map(tr=>Array.from(tr.querySelectorAll('th,td')).map(c=>'"'+c.innerText.replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`pg-report-${type}-${today()}.csv`;a.click();
+  toast('CSV exported!');
+}
+
+/* ═══════════════════════════════════════════════
+   USERS
+═══════════════════════════════════════════════ */
+function renderUsers(){
+  const users=load('users');
+  document.getElementById('users-tbody').innerHTML=users.map(u=>`<tr>
+    <td>${u.name}</td><td>${u.email}</td>
+    <td><span class="role-pill">${u.role}</span></td>
+    <td>${statusBadge(u.status||'Active')}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">🗑</button></td>
+  </tr>`).join('');
+}
+function addUser(){
+  const name=document.getElementById('u-name').value.trim();
+  const email=document.getElementById('u-email').value.trim();
+  if(!name||!email){toast('Name and email required','error');return;}
+  const users=load('users');
+  users.push({id:uid(),name,email,role:document.getElementById('u-role').value,status:'Active'});
+  save('users',users);closeModal('modal-user');renderUsers();
+  addAudit('User Added',`${name} (${document.getElementById('u-role').value})`);
+  toast('User added!');
+}
+function deleteUser(id){
+  if(!confirm('Delete this user?'))return;
+  save('users',load('users').filter(u=>u.id!==id));
+  renderUsers();toast('User deleted','info');
+}
+
+/* ═══════════════════════════════════════════════
+   AUDIT
+═══════════════════════════════════════════════ */
+function renderAudit(){
+  const logs=load('audit');
+  const el=document.getElementById('audit-list');
+  if(!logs.length){el.innerHTML='<div style="color:var(--text3);font-size:.85rem">No audit entries yet</div>';return;}
+  el.innerHTML=logs.map(l=>`<div class="audit-row">
+    <div class="audit-time">${new Date(l.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+    <div class="audit-action"><span class="audit-user">${l.user}</span> — ${l.action}: ${l.detail}</div>
+  </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════
+   SEARCH
+═══════════════════════════════════════════════ */
+function toggleSearch(){
+  const bar=document.getElementById('global-search-bar');
+  bar.style.display=bar.style.display==='none'?'block':'none';
+  if(bar.style.display==='block')document.getElementById('global-search-input').focus();
+}
+function globalSearch(q){
+  if(!q||q.length<2){closeModal('modal-search');return;}
+  const ql=q.toLowerCase();
+  const residents=load('residents').filter(r=>r.name.toLowerCase().includes(ql)||r.mobile.includes(ql)||r.aadhaar?.includes(ql)||getRoomNum(r.roomId).includes(ql));
+  const rooms=load('rooms').filter(r=>r.num.includes(ql));
+  let html='';
+  if(residents.length){
+    html+=`<div style="font-weight:700;margin-bottom:8px;color:var(--accent)">Residents (${residents.length})</div>`;
+    html+=residents.map(r=>`<div class="reminder-row" style="cursor:pointer" onclick="closeModal('modal-search');nav('residents')">
+      <div class="reminder-avatar">${r.name[0]}</div>
+      <div class="reminder-info"><div class="reminder-name">${r.name}</div><div class="reminder-detail">Room ${getRoomNum(r.roomId)} · ${r.mobile}</div></div>
+      ${statusBadge(r.status)}
+    </div>`).join('');
+  }
+  if(rooms.length){
+    html+=`<div style="font-weight:700;margin:12px 0 8px;color:var(--accent)">Rooms (${rooms.length})</div>`;
+    html+=rooms.map(r=>`<div class="reminder-row"><div class="reminder-info"><div class="reminder-name">Room ${r.num}</div><div class="reminder-detail">${getBuildingName(r.buildingId)} · ${r.type}</div></div>${statusBadge(getRoomStatus(r.id))}</div>`).join('');
+  }
+  if(!html)html='<div style="color:var(--text3);text-align:center;padding:24px">No results found</div>';
+  document.getElementById('search-results').innerHTML=html;
+  openModal('modal-search');
+}
+
+/* ═══════════════════════════════════════════════
+   POPULATE SELECT HELPERS ON MODAL OPEN
+═══════════════════════════════════════════════ */
+document.getElementById('modal-floor').addEventListener('transitionend',()=>populateBuildingSelect('fl-building'));
+document.getElementById('modal-room').addEventListener('transitionend',function(){
+  if(this.classList.contains('open')){populateBuildingSelect('r-building');populateFloorSelect('r-floor','r-building');}
+});
+document.getElementById('modal-bulk-rooms').addEventListener('transitionend',function(){
+  if(this.classList.contains('open')){populateBuildingSelect('br-building');populateFloorSelect('br-floor','br-building');}
+});
+document.getElementById('modal-transfer').addEventListener('transitionend',function(){
+  if(this.classList.contains('open')){
+    const residents=load('residents').filter(r=>r.status==='active');
+    document.getElementById('tr-resident').innerHTML=residents.map(r=>`<option value="${r.id}">${r.name} (${getRoomNum(r.roomId)}/${getBedLabel(r.bedId)})</option>`).join('');
+    document.getElementById('tr-date').value=today();
+    populateBuildingSelect('tr-building');populateTrRoomSelect();
+  }
+});
+document.getElementById('modal-payment').addEventListener('transitionend',function(){
+  if(this.classList.contains('open')){
+    const residents=load('residents').filter(r=>r.status==='active');
+    document.getElementById('pay-resident').innerHTML=residents.map(r=>`<option value="${r.id}">${r.name} (Room ${getRoomNum(r.roomId)})</option>`).join('');
+    document.getElementById('pay-date').value=today();
+    document.getElementById('pay-month').value=new Date().toISOString().slice(0,7);
+  }
+});
+document.getElementById('modal-floor').addEventListener('transitionend',function(){
+  if(this.classList.contains('open'))populateBuildingSelect('fl-building');
+});
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+seedData();
+nav('dashboard');
+document.getElementById('topbar-action').style.display='none';
+
+// update overdue badge
+setInterval(()=>{
+  const payments=load('payments');
+  const now=new Date();
+  const overdue=payments.filter(p=>{
+    if(p.status==='paid')return false;
+    const res=load('residents').find(r=>r.id===p.residentId);
+    if(!res)return false;
+    const due=new Date(now.getFullYear(),now.getMonth(),res.dueDay||5);
+    return due<now;
+  }).length;
+  document.getElementById('overdue-badge').textContent=overdue;
+},30000);
+</script>
+</body>
+</html>
